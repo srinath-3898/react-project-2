@@ -1,4 +1,4 @@
-import React, { useReducer, useState } from "react";
+import React, { useEffect, useReducer, useState } from "react";
 import Card from "../UI/Card/Card";
 import classes from "./Login.module.css";
 import Button from "../UI/Button/Button";
@@ -10,7 +10,7 @@ const emailReducer = (state, action) => {
   if (action.type === "INPUT_BLUR") {
     return { value: state.value, isValid: state.value.includes("@") };
   }
-  return { value: "", isValid: false };
+  return { value: state.valid, isValid: state.isValid };
 };
 
 const passwordReducer = (state, action) => {
@@ -20,7 +20,6 @@ const passwordReducer = (state, action) => {
   if (action.type === "INPUT_BLUR") {
     return { value: state.value, isValid: state.value.trim().length > 6 };
   }
-
   return { value: state.value, isValid: state.isValid };
 };
 
@@ -39,42 +38,27 @@ const Login = (props) => {
   const [formIsValid, setFormIsValid] = useState(false);
   const [emailState, dispatchEmail] = useReducer(emailReducer, {
     value: "",
-    isValid: true,
+    isValid: null,
   });
-  const [passwordState, dipatchPassword] = useState(passwordReducer, {
+  const [passwordState, dipatchPassword] = useReducer(passwordReducer, {
     value: "",
-    isValid: true,
+    isValid: null,
   });
   const [collegeState, dispatchCollege] = useReducer(collegeReducer, {
     value: "",
-    isValid: true,
+    isValid: null,
   });
 
   const emailChangeHandler = (event) => {
     dispatchEmail({ type: "USER_INPUT", value: event.target.value });
-    setFormIsValid(
-      event.target.value.includes("@") &&
-        passwordState.value.trim().length > 6 &&
-        collegeState.value.trim().length > 0
-    );
   };
 
   const passwordChangeHandler = (event) => {
     dipatchPassword({ type: "USER_INPUT", value: event.target.value });
-    setFormIsValid(
-      emailState.isValid &&
-        event.target.value.trim().length > 6 &&
-        collegeState.value.trim().length > 0
-    );
   };
 
   const collegeChangeHandler = (event) => {
     dispatchCollege({ type: "USER_INPUT", value: event.target.value });
-    setFormIsValid(
-      emailState.isValid &&
-        passwordState.value.trim().length > 6 &&
-        event.target.value.trim().length > 0
-    );
   };
 
   const validateEmailHandler = () => {
@@ -94,20 +78,20 @@ const Login = (props) => {
     props.onLogin(emailState.value, passwordState.value);
   };
 
-  // useEffect(() => {
-  //   const identifier = setTimeout(() => {
-  //     console.log("Checking form validity");
-  //     setFormIsValid(
-  //       enteredEmail.includes("@") &&
-  //         enteredPassword.trim().length > 6 &&
-  //         enteredCollege.trim().length > 0
-  //     );
-  //   }, 500);
-  //   return () => {
-  //     console.log("CLEAN up");
-  //     clearTimeout(identifier);
-  //   };
-  // }, [enteredEmail, enteredPassword, enteredCollege]);
+  const { isValid: emailIsValid } = emailState;
+  const { isValid: passwordIsValid } = passwordState;
+  const { isValid: collegeIsValid } = collegeState;
+
+  useEffect(() => {
+    const identifier = setTimeout(() => {
+      console.log("Checkign validity");
+      setFormIsValid(emailIsValid && passwordIsValid && collegeIsValid > 0);
+    }, 500);
+    return () => {
+      console.log("CLEAN UP");
+      clearTimeout(identifier);
+    };
+  }, [emailIsValid, passwordIsValid, collegeIsValid]);
 
   return (
     <Card className={classes.login}>
